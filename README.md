@@ -1,4 +1,6 @@
 # QR_Code
+## Assignment for BlondeWaves Internship 
+
 Simple QRcode_scanner android application
 
 1. Scan QR code through camera
