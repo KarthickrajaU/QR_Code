@@ -3,8 +3,10 @@
 
 Simple QRcode_scanner android application
 
-1. Scan QR code through camera
-2. Scan QRCode from photo in gallery
+## Functions
+1. QRcode for given input string "Annonymous"
+2. Scan QR code through camera
+3. Scan QRCode from photo in gallery
 
 # WORKFLOW VIDEO
 
