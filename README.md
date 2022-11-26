@@ -1,4 +1,4 @@
-# QR_Code
+# QR_Code Scanner
 ## Assignment for BlondeWaves Internship 
 
 Simple QRcode_scanner android application
