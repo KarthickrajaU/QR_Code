@@ -1,7 +1,7 @@
-# QR_Code Scanner
+# QR_Code Generator and Scanner
 ## Assignment for BlondeWaves Internship 
 
-Simple QRcode_Generator and Scanner android application
+QRcode_Generator and Scanner android application
 
 ## Functions
 1. QRcode for given input string "Annonymous"
