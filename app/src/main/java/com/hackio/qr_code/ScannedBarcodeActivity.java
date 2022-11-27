@@ -54,6 +54,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class ScannedBarcodeActivity extends AppCompatActivity {
@@ -63,7 +65,7 @@ public class ScannedBarcodeActivity extends AppCompatActivity {
     private CameraSource cameraSource;
     private static final int REQUEST_CAMERA_PERMISSION = 201;
     Button btnAction;
-    String intentData = "";
+    String intentData = null;
     boolean isEmail = false;
     private static final int SELECT_PHOTO = 100;
     private static final int MAX_PIXELS = 1 << 25;
@@ -87,17 +89,13 @@ public class ScannedBarcodeActivity extends AppCompatActivity {
         btnAction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (intentData.length() > 0) {
-                    if (intentData.startsWith("https")) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(intentData)));
-                    }
-
-                } else {
+                if (intentData==null) {
                     Intent photoPic = new Intent(Intent.ACTION_PICK);
                     photoPic.setDataAndType(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
                     startActivityForResult(photoPic, SELECT_PHOTO);
                     //startActivity(new Intent(ScannedBarcodeActivity.this, PictureBarcodeActivity        .class));
+                }else{
+                    classification(intentData);
                 }
             }
         });
@@ -159,9 +157,9 @@ public class ScannedBarcodeActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             intentData = barcodes.valueAt(0).displayValue;
+                            btnAction.setText(intentData);
+                            txtBarcodeValue.setText(intentData);
 
-
-                          classification(intentData);
                         }
                     });
 
@@ -171,12 +169,36 @@ public class ScannedBarcodeActivity extends AppCompatActivity {
     }
 
     private void classification(String intentData) {
-        if (intentData.startsWith("http")) {
-            isEmail = false;
+        check check=new check(intentData);
+        this.intentData=intentData;
+        if (check.isURL()) {
             btnAction.setText("LAUNCH URL" + "\n" + intentData);
-
             txtBarcodeValue.setText(intentData);
-        } else {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intentData));
+            browserIntent.setData(Uri.parse(intentData));
+            startActivity(browserIntent);
+        }else if(check.isEmail()){
+
+            String[] mail={intentData};
+            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+            emailIntent.setData(Uri.parse("mailto:"));
+            emailIntent.setType("text/plain");
+            emailIntent.putExtra(Intent.EXTRA_EMAIL, mail);
+
+            try {
+                startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+                finish();
+            } catch (android.content.ActivityNotFoundException ex) {
+                Toast.makeText(this,
+                        "There is no email client installed.", Toast.LENGTH_SHORT).show();
+            }
+
+        }else if(check.isPHONE_NUMBER()){
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(Uri.parse(intentData));
+            startActivity(intent);
+        }
+        else {
             txtBarcodeValue.setText(intentData);
 
         }
@@ -198,33 +220,28 @@ public class ScannedBarcodeActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.e("QQQ", data.getDataString() + "\n" + requestCode);
+        if(data==null){
+            return;
+        }
         if (requestCode == SELECT_PHOTO) {
-            //decodedata(data);
             analyzedata(data);
         }
     }
 
     private void analyzedata(Intent intent) {
         Uri uri = intent.getData();
-        Bitmap bitmap = null;
-        try {
-            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String output = "not found";
-        try {
-            Bitmap_operation bitmap_operation=new Bitmap_operation();
-            output = bitmap_operation.detectBarCode(bitmap_operation.getResizedBitmap(bitmap_operation.decodeBitmapUri(context, uri), 200));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        if(!output.equals("not found")) {
-            txtBarcodeValue.setText(output);
-            classification(output);
-        }
 
+        String output = "";
+
+            Bitmap_operation bitmap_operation=new Bitmap_operation(context,uri);
+            output=bitmap_operation.getdata();
+    if(output!=null) {
+
+            classification(output);
+    }else{
+        intentData=null;
+        txtBarcodeValue.setText("QR CODE NOT FOUND");
+    }
     }
 
 

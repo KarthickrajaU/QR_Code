@@ -20,6 +20,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 
 public class Bitmap_operation {
+    private Context context;
+    private Uri uri;
+    private Bitmap bitmap;
+    public Bitmap_operation(Context context, Uri uri) {
+        this.context=context;
+        this.uri=uri;
+    }
+    public Bitmap_operation(Bitmap bitmap){
+        this.bitmap=bitmap;
+    }
+
     String detectBarCode(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -57,12 +68,12 @@ public class Bitmap_operation {
         return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
-    public Bitmap decodeBitmapUri(Context ctx, Uri uri) throws FileNotFoundException {
+    public Bitmap decodeBitmapUri(Uri uri) throws FileNotFoundException {
         int targetW = 600;
         int targetH = 600;
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(ctx.getContentResolver().openInputStream(uri), null, bmOptions);
+        BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
@@ -70,7 +81,16 @@ public class Bitmap_operation {
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
 
-        return BitmapFactory.decodeStream(ctx.getContentResolver()
+        return BitmapFactory.decodeStream(context.getContentResolver()
                 .openInputStream(uri), null, bmOptions);
+    }
+
+    public String getdata() {
+        try {
+            return detectBarCode(getResizedBitmap(decodeBitmapUri(uri),200));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return "not found";
     }
 }
